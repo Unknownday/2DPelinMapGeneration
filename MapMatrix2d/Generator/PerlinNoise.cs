@@ -1,11 +1,21 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 
 namespace MapMatrix2d.Generator
 {
     public static class PerlinNoise
     {
+        /// <summary>  
+        /// Generates a map of Perlin noise. 
+        /// </summary>  
+        /// <param name="width">Width of the map to be generated.</param>  
+        /// <param name="height">Height of the map to be generated.</param>  
+        /// <param name="frequency">Controls the scale of the noise features.Higher values result in smaller, more detailed patterns, while lower values create larger, smoother features.</param>  
+        /// <param name="amplitude">Controls the intensity or height of the noise. Higher values produce more pronounced variations, while lower values result in flatter noise.</param>  
+        /// <param name="persistence">Controls how much each octave contributes to the final noise. Lower values reduce the influence of higher octaves, creating smoother noise.</param>  
+        /// <param name="octaves">The number of layers of noise added together. Each octave adds finer details at a higher frequency, increasing the complexity of the noise.</param>  
+        /// <param name="seed">The seed value for the random number generator. Ensures that the same seed produces the same noise map, allowing for reproducibility.</param>  
+        /// <param name="power">A value applied to the noise to modify its distribution. Values greater than 1 reduce low values and emphasize high values, while values less than 1 do the opposite. Useful for adjusting the balance between low and high areas.</param>  
         public static Bitmap GetNoiseMap(int width, int height, float frequency, float amplitude, float persistence, int octaves, int seed, float power = 1.0f)
         {
             Bitmap result = new Bitmap(width, height);
@@ -78,7 +88,7 @@ namespace MapMatrix2d.Generator
         {
             float p = (d - c) - (a - b);
 
-            return p * (int)Math.Pow(t, 3) + ((a - b) - p) * (int)Math.Pow(t, 2) + (c - a) * t + b;
+            return p * t * t * t + ((a - b) - p) * t * t + (c - a) * t + b;
         }
 
         private static float[,] GenerateNoise(int seed, int width, int height)
