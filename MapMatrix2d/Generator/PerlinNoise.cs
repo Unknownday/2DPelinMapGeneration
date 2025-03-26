@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace MapMatrix2d.Generator
 {
@@ -16,7 +17,7 @@ namespace MapMatrix2d.Generator
         /// <param name="octaves">The number of layers of noise added together. Each octave adds finer details at a higher frequency, increasing the complexity of the noise.</param>  
         /// <param name="seed">The seed value for the random number generator. Ensures that the same seed produces the same noise map, allowing for reproducibility.</param>  
         /// <param name="power">A value applied to the noise to modify its distribution. Values greater than 1 reduce low values and emphasize high values, while values less than 1 do the opposite. Useful for adjusting the balance between low and high areas.</param>  
-        public static Bitmap GetNoiseMap(int width, int height, float frequency, float amplitude, float persistence, int octaves, int seed, float power = 1.0f)
+        public static Bitmap GetNoiseMap(int width, int height, float frequency, float amplitude, float persistence, int octaves, int seed, float power = 0.9f)
         {
             Bitmap result = new Bitmap(width, height);
             float[,] noise = GenerateNoise(seed, width, height);
@@ -35,7 +36,8 @@ namespace MapMatrix2d.Generator
                     result.SetPixel(x, y, Color.FromArgb(rgbValue, rgbValue, rgbValue));
                 }
             }
-
+            result = ApplyGaussianBlur(result, 10, 2.6f);
+            
             return result;
         }
 
@@ -109,5 +111,72 @@ namespace MapMatrix2d.Generator
 
         private static int Clamp(int value, int min, int max) => value < min ? min : value > max ? max : value;
         private static float Clamp(float value, float min, float max) => value < min ? min : value > max ? max : value;
+
+        public static Bitmap ApplyGaussianBlur(Bitmap bitmap, int radius, float sigma)
+        {
+            int size = radius * 2 + 1;
+            float[,] kernel = CreateGaussianKernel(size, sigma);
+
+            Bitmap result = new Bitmap(bitmap.Width, bitmap.Height);
+
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    float r = 0, g = 0, b = 0;
+
+                    for (int i = -radius; i <= radius; i++)
+                    {
+                        for (int j = -radius; j <= radius; j++)
+                        {
+                            int xi = Clamp(x + i, 0, bitmap.Width - 1);
+                            int yj = Clamp(y + j, 0, bitmap.Height - 1);
+
+                            Color pixel = bitmap.GetPixel(xi, yj);
+
+                            float weight = kernel[i + radius, j + radius];
+
+                            r += pixel.R * weight;
+                            g += pixel.G * weight;
+                            b += pixel.B * weight;
+                        }
+                    }
+
+                    result.SetPixel(x, y, Color.FromArgb((int)r, (int)g, (int)b));
+                }
+            }
+
+            return result;
+        }
+
+        private static float[,] CreateGaussianKernel(int size, float sigma)
+        {
+            float[,] kernel = new float[size, size];
+            float sum = 0;
+
+            int radius = size / 2;
+
+            for (int x = -radius; x <= radius; x++)
+            {
+                for (int y = -radius; y <= radius; y++)
+                {
+                    float exponent = -(x * x + y * y) / (2 * sigma * sigma);
+                    float value = (float)(Math.Exp(exponent) / (2 * Math.PI * sigma * sigma));
+
+                    kernel[x + radius, y + radius] = value;
+                    sum += value;
+                }
+            }
+
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    kernel[x, y] /= sum;
+                }
+            }
+
+            return kernel;
+        }
     }
 }

@@ -23,7 +23,7 @@ class Program
         for (int i = 0; i < 8; i++) seed += new Random().Next(0, 10);
         int seedValue = Convert.ToInt32(seed);
         
-        Bitmap noiseBitmap = PerlinNoise.GetNoiseMap(width, height, 0.1f, 1.0f, 0.5f, 16, 18, 1f);
+        Bitmap noiseBitmap = PerlinNoise.GetNoiseMap(width, height, 0.1f, 1.0f, 0.1f, 16, 18, 0.9f);
 
         for (int x = 0; x < width; x++)
         {
